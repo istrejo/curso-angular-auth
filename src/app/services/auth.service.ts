@@ -1,16 +1,23 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@environments/environment';
-import { switchMap, tap } from 'rxjs';
+import { BehaviorSubject, switchMap, tap } from 'rxjs';
 import { TokenService } from './token.service';
 import { LoginResponse } from '@models/auth.model';
+import { User } from '@models/user.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   apiUrl = environment.API_URL;
+  user$ = new BehaviorSubject<User | null>(null);
+
   constructor(private http: HttpClient, private tokenService: TokenService) {}
+
+  getDataUser() {
+    return this.user$.getValue();
+  }
 
   /**
    * The login function sends a POST request to the API endpoint for user authentication with the
@@ -114,6 +121,26 @@ export class AuthService {
       token,
       newPassword,
     });
+  }
+
+  /**
+   * The profile function retrieves user profile data using a token for authorization.
+   * @returns The `profile()` function is returning an HTTP GET request to the
+   * `${this.apiUrl}/auth/profile` endpoint with the user's profile data. The request includes an
+   * Authorization header with a Bearer token for authentication. The response is expected to be of type
+   * `User`, which likely contains information about the authenticated user's profile.
+   */
+  profile() {
+    const token = this.tokenService.getToken();
+    return this.http
+      .get<User>(`${this.apiUrl}/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .pipe(
+        tap((user) => {
+          this.user$.next(user);
+        })
+      );
   }
 
   logout() {
