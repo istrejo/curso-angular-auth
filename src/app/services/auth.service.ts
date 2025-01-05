@@ -42,6 +42,19 @@ export class AuthService {
       );
   }
 
+  refreshToken(refreshToken: string) {
+    return this.http
+      .post<LoginResponse>(`${this.apiUrl}/auth/refresh-token`, {
+        refreshToken,
+      })
+      .pipe(
+        tap((response) => {
+          this.tokenService.saveToken(response.access_token);
+          this.tokenService.saveRefreshToken(response.refresh_token);
+        })
+      );
+  }
+
   /**
    * The `register` function sends a POST request to the API endpoint for user registration with the
    * provided name, email, and password.
